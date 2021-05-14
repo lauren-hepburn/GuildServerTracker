@@ -3,14 +3,18 @@ import os
 from replit import db
 from keep_alive import keep_alive
 
-client = discord.Client()
+client = discord.Client()  
 
-def add_guild(m_guild, m_server):
-  db[m_guild] = m_server
+def string_length(string):
+  count = 0
+  for letter in string:
+    count += 1
+  return count
   
 @client.event
 async def on_ready():
   print("We have logged in as {0.user}".format(client))
+  await client.change_presence(status=discord.Status.online, activity = discord.Game("$help"))
 
 @client.event
 async def on_message(message):
@@ -23,8 +27,11 @@ async def on_message(message):
     x = msg.split(" ", 3)[1:]
     m_guild = x[0]
     m_server = x[1]
-    add_guild(m_guild, m_server)
-    await message.channel.send("New guild added successfully.")
+    if string_length(m_server) == 4:
+      db[m_guild] = m_server
+      await message.channel.send("New guild added successfully.")
+    else:
+      await message.channel.send("Incorrect channel. Channel must be format of <Ser3> or <Med1>, etc.")
 
   if msg.startswith("$listguilds"):
     for key in db.keys():
@@ -44,14 +51,19 @@ async def on_message(message):
     for key in db:
       y = key.lower()
       if x == y:
-        await message.channel.send(db[key])
-        break
+          await message.channel.send(db[key])
+          break
 
   if msg.startswith("$delguild"):
     x = msg.split(" ", 3)[1:]
     m_guild = x[0]
-    del db[m_guild]
-    await message.channel.send("Guild deleted successfully.")
+    x = m_guild.lower()
+    for key in db:
+      y = key.lower()
+      if x == y:
+        del db[key]
+        await message.channel.send("Guild deleted successfully.")
+        break
 
 keep_alive()
 client.run(os.getenv("TOKEN"))
